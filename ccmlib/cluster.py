@@ -387,6 +387,16 @@ class Cluster(object):
                     if itf is not None:
                         common.assert_socket_available(itf)
 
+
+        # dtests set "num_tokens" to a non-empty value to indicate it's using vnodes
+        auto_allocate_tokens = self.use_vnodes or self._config_options["num_tokens"]
+        use_new_token_allocation = auto_allocate_tokens and ("allocate_tokens_for_local_replication_factor" not in self._config_options or \
+                                     self._config_options["allocate_tokens_for_local_replication_factor"] is not None)
+
+        if use_new_token_allocation:
+            common.debug("Using new token allocation algorithm. Will start nodes in parallel but make them wait " \
+                         "for previous nodes when starting cluster via \"cassandra.init.wait_for_live_members\" option.")
+
         started = []
         for node in list(self.nodes.values()):
             if not node.is_running():
@@ -394,7 +404,13 @@ class Cluster(object):
                 if os.path.exists(node.logfilename()):
                     mark = node.mark_log()
 
-                p = node.start(update_pid=False, jvm_args=jvm_args, jvm_version=jvm_version,
+                # New node must wait to all previous nodes to be up and running to ensure
+                # new token allocation algorithm works correctly (CASSANDRA-13701)
+                if use_new_token_allocation:
+                    node_jvm_args = list(jvm_args)
+                    node_jvm_args.append("-Dcassandra.init.wait_for_live_members={}".format(len(started)))
+
+                p = node.start(update_pid=False, jvm_args=node_jvm_args, jvm_version=jvm_version,
                                profile_options=profile_options, verbose=verbose, quiet_start=quiet_start,
                                allow_root=allow_root)
 
