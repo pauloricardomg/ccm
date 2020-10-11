@@ -675,6 +675,7 @@ class Node(object):
 
         args = args + ['-p', pidfile, '-Dcassandra.join_ring=%s' % str(join_ring)]
 
+        args.append('-Dcassandra.ring_delay_ms=10000')
         args.append('-Dcassandra.logdir=%s' % os.path.join(self.get_path(), 'logs'))
         if replace_token is not None:
             args.append('-Dcassandra.replace_token=%s' % str(replace_token))
