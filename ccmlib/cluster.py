@@ -412,7 +412,7 @@ class Cluster(object):
 
                 p = node.start(update_pid=False, jvm_args=node_jvm_args, jvm_version=jvm_version,
                                profile_options=profile_options, verbose=verbose, quiet_start=quiet_start,
-                               allow_root=allow_root)
+                               allow_root=allow_root, ring_delay_ms=5000 if started else 0)
 
                 # Prior to JDK8, starting every node at once could lead to a
                 # nanotime collision where the RNG that generates a node's tokens
