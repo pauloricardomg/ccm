@@ -732,9 +732,9 @@ class Node(object):
             if quiet_start and self.cluster.version() >= '2.2.4':
                 args.append('-q')
 
-            process = subprocess.Popen(args, cwd=self.get_bin_dir(), env=env, stdout=stdout_sink, stderr=stderr_sink)
+            process = subprocess.Popen(args, cwd=self.get_bin_dir(), env=env, stdout=stdout_sink, stderr=stderr_sink, encoding='utf8')
         else:
-            process = subprocess.Popen(args, env=env, stdout=stdout_sink, stderr=stderr_sink)
+            process = subprocess.Popen(args, env=env, stdout=stdout_sink, stderr=stderr_sink, encoding='utf8')
 
         process.stderr_file = stderr_sink
 
@@ -858,7 +858,7 @@ class Node(object):
         args = [nodetool, '-h', 'localhost', '-p', str(self.jmx_port)]
         args += shlex.split(cmd)
 
-        return subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        return subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, encoding='utf8')
 
     def nodetool(self, cmd):
         p = self.nodetool_process(cmd)
@@ -889,7 +889,7 @@ class Node(object):
         # CASSANDRA-8358 switched from thrift to binary port
         host, port = self.network_interfaces['thrift'] if self.get_cassandra_version() < '2.2' else self.network_interfaces['binary']
         args = ['-d', host, '-p', str(port)]
-        return subprocess.Popen([loader_bin] + args + options, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        return subprocess.Popen([loader_bin] + args + options, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, encoding='utf8')
 
     def bulkload(self, options):
         p = self.bulkload_process(options=options)
@@ -898,7 +898,7 @@ class Node(object):
     def scrub_process(self, options):
         scrub_bin = self.get_tool('sstablescrub')
         env = self.get_env()
-        return subprocess.Popen([scrub_bin] + options, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        return subprocess.Popen([scrub_bin] + options, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, encoding='utf8')
 
     def scrub(self, options):
         p = self.scrub_process(options=options)
@@ -907,7 +907,7 @@ class Node(object):
     def verify_process(self, options):
         verify_bin = self.get_tool('sstableverify')
         env = self.get_env()
-        return subprocess.Popen([verify_bin] + options, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        return subprocess.Popen([verify_bin] + options, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, encoding='utf8')
 
     def verify(self, options):
         p = self.verify_process(options=options)
@@ -934,12 +934,12 @@ class Node(object):
 
         if cmds is None:
             if common.is_win():
-                subprocess.Popen([cqlsh] + args, env=env, creationflags=subprocess.CREATE_NEW_CONSOLE)
+                subprocess.Popen([cqlsh] + args, env=env, creationflags=subprocess.CREATE_NEW_CONSOLE, encoding='utf8')
             else:
                 os.execve(cqlsh, [common.platform_binary('cqlsh')] + args, env)
         else:
             p = subprocess.Popen([cqlsh] + args, env=env, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
-                                 stdout=subprocess.PIPE, universal_newlines=True)
+                                 stdout=subprocess.PIPE, universal_newlines=True, encoding='utf8')
 
         if cmds is not None:
             for cmd in cmds.split(';'):
@@ -1072,7 +1072,8 @@ class Node(object):
                 cmd.append('--debug')
             cmd.append(f)
             p = subprocess.Popen(cmd, cwd=os.path.join(self.get_install_dir(), 'bin'),
-                                 env=env, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                                 env=env, stderr=subprocess.PIPE, stdout=subprocess.PIPE,
+                                 encoding='utf8')
             processes.append(p)
 
         for sstablefile in sstablefiles:
@@ -1099,7 +1100,7 @@ class Node(object):
         cmd = [sstablemetadata]
         cmd.extend(sstablefiles)
 
-        return subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env)
+        return subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env, encoding='utf8')
 
     def run_sstablemetadata(self, datafiles=None, keyspace=None, column_families=None):
         p = self.run_sstablemetadata_process(datafiles, keyspace, column_families)
@@ -1121,7 +1122,7 @@ class Node(object):
             if keys is not None:
                 for key in keys:
                     cmd = cmd + ["-k", key]
-            p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env)
+            p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env, encoding='utf8')
             if command:
                 out, err, rc = handle_external_tool_process(p, "sstabledump")
                 print_(out)
@@ -1148,7 +1149,7 @@ class Node(object):
         sstableexpiredblockers = common.join_bin(cdir, os.path.join('tools', 'bin'), 'sstableexpiredblockers')
         env = self.get_env()
         cmd = [sstableexpiredblockers, keyspace, column_family]
-        return subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env)
+        return subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env, encoding='utf8')
 
     def run_sstableexpiredblockers(self, keyspace=None, column_family=None):
         p = self.run_sstableexpiredblockers_process(keyspace=keyspace, column_family=column_family)
@@ -1162,7 +1163,7 @@ class Node(object):
         sstableupgrade = self.get_tool('sstableupgrade')
         env = self.get_env()
         cmd = [sstableupgrade, keyspace, column_family]
-        p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env)
+        p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env, encoding='utf8')
         return p
 
     def run_sstableupgrade(self, keyspace=None, column_family=None):
@@ -1188,7 +1189,7 @@ class Node(object):
                 cmd = [sstablerepairedset, "--really-set", "--is-repaired", sstable]
             else:
                 cmd = [sstablerepairedset, "--really-set", "--is-unrepaired", sstable]
-            p = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
             processes.append(p)
 
         return processes
@@ -1207,7 +1208,7 @@ class Node(object):
 
         cmd = [sstablelevelreset, "--really-reset", keyspace, cf]
 
-        return subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env)
+        return subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env, encoding='utf8')
 
     def run_sstablelevelreset(self, keyspace, cf):
         p = self.run_sstablelevelreset_process(keyspace, cf)
@@ -1223,7 +1224,7 @@ class Node(object):
         else:
             cmd = [sstableofflinerelevel, keyspace, cf]
 
-        return subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env)
+        return subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env, encoding='utf8')
 
     def run_sstableofflinerelevel(self, keyspace, cf, dry_run=False):
         p = self.run_sstableofflinerelevel_process(keyspace, cf, dry_run=dry_run)
@@ -1238,7 +1239,7 @@ class Node(object):
         if options is not None:
             cmd[1:1] = options
 
-        return subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env)
+        return subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=env, encoding='utf8')
 
     def run_sstableverify(self, keyspace, cf, options=None):
         p = self.run_sstableverify_process(keyspace, cf, options=options)
@@ -1315,7 +1316,7 @@ class Node(object):
 
         args.extend([keyspace, table])
 
-        p = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
 
         stdout, stderr = p.communicate()
 
@@ -1351,7 +1352,7 @@ class Node(object):
         args = [stress] + stress_options
         try:
             p = subprocess.Popen(args, cwd=common.parse_path(stress),
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
             return p
         except KeyboardInterrupt:
             pass
@@ -1813,7 +1814,7 @@ class Node(object):
         except ImportError:
             common.warning("psutil not installed. Pid tracking functionality will suffer. See README for details.")
             cmd = 'tasklist /fi "PID eq ' + str(self.pid) + '"'
-            proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+            proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, encoding='utf8')
 
             for line in proc.stdout:
                 if re.match("Image", str(line)):
@@ -2008,7 +2009,7 @@ class Node(object):
                                                        'bin',
                                                        'jstack'))
         jstack_cmd = [jstack_location, '-J-d64'] + opts + [str(self.pid)]
-        return subprocess.Popen(jstack_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return subprocess.Popen(jstack_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
 
     def jstack(self, opts=None):
         p = self.jstack_process(opts=opts)
@@ -2026,7 +2027,7 @@ class Node(object):
         byteman_cmd.append('-p')
         byteman_cmd.append(self.byteman_port)
         byteman_cmd += opts
-        return subprocess.Popen(byteman_cmd)
+        return subprocess.Popen(byteman_cmd, encoding='utf8')
 
     def byteman_submit(self, opts):
         p = self.byteman_submit_process(opts=opts)
@@ -2039,7 +2040,7 @@ class Node(object):
         env = self.get_env()
         args = [self.get_tool('sstableutil'), '--type', 'final', ks, table]
 
-        p = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
 
         return p
 
