@@ -674,7 +674,7 @@ class Node(object):
               allow_root=False,
               set_migration_task=True,
               jvm_version=None,
-              ring_delay_ms=5000):
+              ring_delay_ms=10000):
         """
         Start the node. Options includes:
           - join_ring: if false, start the node with -Dcassandra.join_ring=False
